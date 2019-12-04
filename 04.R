@@ -1,5 +1,6 @@
 library(purrr)
 
+# convert number to vector of digits
 #integer division then modulo division by 10 on result
 # return a vector of digits
 digits <- function(number, units){ number %/% units %% 10}
