@@ -1,38 +1,46 @@
 library(purrr)
-min <- 359282
-max <- 820401
-ran <- min:max
 
 #integer division then modulo division by 10 on result
 # return a vector of digits
 digits <- function(number, units){ number %/% units %% 10}
 
+has_adjacents <- function(x){
+  # entire vector processed no adjacents found
+  if(length(x) == 1) return(FALSE)
+  # if first item is equal to second a adjacent if found
+  if(x[1] == x[2]) return(TRUE)
+  # if no adjacent found process remainder of vector
+  has_adjacents(x[-1])
+}
 
-#if the digitas sorted are the same as original digits then ascending order
-is_increasing <- function(number){
- # len <- as.character(number) %>% 
-  #          nchar()
-  dig <- digits(number, 10^c(5:0))
-  identical(dig, sort(dig))
+is_increasing <- function(x){
+  # end of vector reached, all values in ascending value
+  if(length(x) == 1)return(TRUE)
+  # if first value is greater than second value then not in ascending order
+  if(x[1] > x[2]) return(FALSE)
+  # if first value not greater then second value process rest of vector
+  is_increasing(x[-1])
+}
+
+# perform run length encoding
+# test if any of the runs have a length of 2
+has_adjacent <- function(x){
+  (rle(x)$lengths == 2) %>% any()
   
 }
 
-has_multiple <- function(number){
- # len <- as.character(number) %>% 
-  #  nchar()
-  dig <- digits(number, 10^c(5:0))
-  duplicated(dig) %>% any()
-  
-}
+min <- 359282
+max <- 820401
 
-has_adjacent <- function(number){
-  dig <- digits(number, 10^c(5:0))
-  (rle(dig)$lengths == 2) %>% any()
-  
-}
-part1 <- ran[map_lgl(ran, ~ is_increasing(.x) && has_multiple(.x))]
-length(part1)
+#convert to digits
+dig <- map(min:max, digits, units = 10^c(5:0))
 
-part2 <- map_lgl(part1, has_adjacent)
-sum(part2)
+increasing <- dig[map_lgl(dig, is_increasing)]
+increasing_adjacents <- increasing[map_lgl(increasing, has_adjacents)]
+part1 <- length(increasing_adjacents)
+part1
+
+
+part2 <- map_lgl(increasing_adjacents, has_adjacent) %>% sum()
+part2
 
