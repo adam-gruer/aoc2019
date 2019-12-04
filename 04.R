@@ -8,7 +8,7 @@ digits <- function(number, units){ number %/% units %% 10}
 has_adjacents <- function(x){
   # entire vector processed no adjacents found
   if(length(x) == 1) return(FALSE)
-  # if first item is equal to second a adjacent if found
+  # if first item is equal to second an adjacent has been found
   if(x[1] == x[2]) return(TRUE)
   # if no adjacent found process remainder of vector
   has_adjacents(x[-1])
