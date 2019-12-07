@@ -37,11 +37,11 @@ max <- 820401
 dig <- map(min:max, digits, units = 10^c(5:0))
 
 increasing <- dig[map_lgl(dig, is_increasing)]
-increasing_adjacents <- increasing[map_lgl(increasing, has_adjacents)]
-part1 <- length(increasing_adjacents)
+valid_password <- increasing[map_lgl(increasing, has_adjacents)]
+part1 <- length(valid_password)
 part1
 
 
-part2 <- map_lgl(increasing_adjacents, has_adjacent) %>% sum()
+part2 <- map_lgl(valid_password, has_adjacent) %>% sum()
 part2
 
