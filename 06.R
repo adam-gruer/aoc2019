@@ -9,11 +9,11 @@ orbits_edges <- stringr::str_split(orbits_map, "\\)") %>%
 
 orbits_graph <- igraph::graph_from_data_frame(orbits_edges)
 
-part1 <- igraph::distance_table(orbits_graph)$res %>% 
+part1 <- igraph::distances(orbits_graph, to = "COM") %>% 
       sum()
 part1
 
 part2 <- distances(orbits_graph, 
-               v = V(orbits_graph)["YOU"] ,
-               to = V(orbits_graph)["SAN"]) - 2
+               v = "YOU" ,
+               to = "SAN") - 2
 part2
