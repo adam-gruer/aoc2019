@@ -122,7 +122,9 @@ intcode <- function(program,
                     input = NULL,
                     output = NULL,
                     instruction_pointer = 1,
-                    input_pointer = 1){
+                    input_pointer = 1,
+                    phase_processed = FALSE,
+                    mode = "sequence"){
 
  
   instruction <- program[instruction_pointer]
@@ -158,14 +160,24 @@ intcode <- function(program,
     get_next_intruction_pointer(instruction_pointer, opcode)
   }
   
+
+  phase_processed <- if(input_pointer > 1 & opcode == 3) {!phase_processed} else {phase_processed}
+  
   input_pointer <- if(opcode == 3){
     input_pointer + 1
   } else input_pointer
   
+
+
   
-  print(program)
-  intcode(program, input, output, instruction_pointer, input_pointer)
   
+ # print(program)
+  if(mode == "sequence" | (!phase_processed & opcode != 3) ){
+  intcode(program, input, output, instruction_pointer, input_pointer, phase_processed)
+  } else {
+    list(program = program, input = input, output =  output,  instruction_pointer = instruction_pointer, input_pointer = input_pointer,
+         phase_processed = phase_processed)
+  }
   
 }
 
@@ -187,8 +199,12 @@ part1 <- apply(phases, 1, run_sequence) %>%
 
 part1
 
+
+
 program <- c(3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,
              27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5)
+
+intcode(program, c(5, 0), mode = "feedback")
 
 phases <- gtools::permutations(5, 5, 5:9)
 phases 

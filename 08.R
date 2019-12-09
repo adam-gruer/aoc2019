@@ -13,21 +13,18 @@ fewest_zeroes <- apply(SIF, 3, function(x){sum(x == 0)}) %>%
 part1 <- sum(SIF[,,fewest_zeroes]  == 1) * sum(SIF[,,fewest_zeroes]  == 2) 
 part1
  
- 
-  
-compare <- function(a,b){
-  if(a == 2 & b != 2){b} else{a}
-}
- 
-message <- apply(SIF,
-      c(1,2),
-      function(x) {purrr::reduce(x, compare, .init = 2)}
-      )  
 
-cbind(expand.grid( y = 1:6,x = 1:25), value = as.vector(message)) %>% 
+
+message <- apply(SIF, c(1,2) ,function(x){x[x !=2][1]} )
+
+cbind(expand.grid( y = -(1:6), x = 1:25), value = as.vector(message)) %>% 
   ggplot()+
-  geom_tile(aes(x, -y, fill = value)) +
+  geom_tile(aes(x, y, fill = value)) +
   coord_fixed()
+
+
+
+
  
  
  
