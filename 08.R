@@ -1,20 +1,34 @@
 library(magrittr)
-sig <- scan("08_input.txt", what = "character")
-sig <- stringr::str_split(sig, "")
-sig <- unlist(sig)
-sig <- as.integer(sig)
-x <- array(sig, dim = c(25,6, 100))
-x <- aperm(x, c(2,1,3))
+SIF <- scan("08_input.txt", what = "character")
+SIF <- stringr::str_split(SIF, "")
+SIF <- unlist(SIF)
+SIF <- as.integer(SIF)
+SIF <- array(SIF, dim = c(25,6, 100))
+SIF <- aperm(SIF, c(2,1,3))
 
-fewest_zeroes <- apply(x, 3, function(x){sum(x == 0)}) %>% 
+
+fewest_zeroes <- apply(SIF, 3, function(x){sum(x == 0)}) %>% 
   which.min()
 
-part1 <- sum(x[,,fewest_zeroes]  == 1) * sum(x[,,fewest_zeroes]  == 2) 
+part1 <- sum(SIF[,,fewest_zeroes]  == 1) * sum(SIF[,,fewest_zeroes]  == 2) 
 part1
+ 
+ 
+  
+compare <- function(a,b){
+  if(a == 2 & b != 2){b} else{a}
+}
+ 
+message <- apply(SIF,
+      c(1,2),
+      function(x) {purrr::reduce(x, compare, .init = 2)}
+      )  
 
-x[1,1,][x[1,1,] != 2][1]
-
-
-
-
+cbind(expand.grid( y = 1:6,x = 1:25), value = as.vector(message)) %>% 
+  ggplot()+
+  geom_tile(aes(x, -y, fill = value)) +
+  coord_fixed()
+ 
+ 
+ 
       
