@@ -122,8 +122,7 @@ intcode <- function(program,
                     input = NULL,
                     output = NULL,
                     instruction_pointer = 1,
-                    input_pointer = 1,
-                    loop_mode = "single"){
+                    input_pointer = 1){
 
  
   instruction <- program[instruction_pointer]
@@ -164,6 +163,7 @@ intcode <- function(program,
   } else input_pointer
   
   
+  print(program)
   intcode(program, input, output, instruction_pointer, input_pointer)
   
   
@@ -187,7 +187,15 @@ part1 <- apply(phases, 1, run_sequence) %>%
 
 part1
 
-p
+program <- c(3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,
+             27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5)
+
+phases <- gtools::permutations(5, 5, 5:9)
+phases 
+apply(phases, 1, run_sequence)
+amp_controller(0,5)
+
+intcode(program, c(5,0))
 
 
 
