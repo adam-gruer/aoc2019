@@ -13,6 +13,13 @@ get_next_intruction_pointer <- function(instruction_pointer, op){
   instruction_pointer + get_n_params(op) + 1
 }
 
+write_param <- function(param, param_mode, relative_base){
+  if(param_mode == 0){
+    param + 1
+  } else if (param_mode == 2){
+    param + 1 + relative_base
+  }
+}
 get_param <- function(program, param_mode, param, relative_base = 0) {
   
   if(param_mode == 0){
@@ -26,53 +33,50 @@ get_param <- function(program, param_mode, param, relative_base = 0) {
   }
 }
 
-add <- function(program, params, param_modes ) {
+add <- function(program, params, param_modes, relative_base ) {
   
-  a <-  get_param(program, param_modes[1], params[1])
-  b <- get_param(program, param_modes[2], params[2])
+  a <- get_param(program, param_modes[1], params[1], relative_base)
+  b <- get_param(program, param_modes[2], params[2], relative_base)
   
-  program[params[3] + 1] <- a + b
+  program[write_param(params[3], param_modes[3], relative_base)] <- a + b
   program
 }
 
 
 
-multiply <- function(program, params, param_modes ) {
+multiply <- function(program, params, param_modes, relative_base ) {
   
-  a <-  get_param(program, param_modes[1], params[1])
-  b <- get_param(program, param_modes[2], params[2])
+  a <- get_param(program, param_modes[1], params[1], relative_base)
+  b <- get_param(program, param_modes[2], params[2], relative_base)
   
-  program[params[3] + 1] <- a * b
+  program[write_param(params[3], param_modes[3], relative_base)] <- a * b
   program
 }
 
 
 
-less_than <- function(program, params, param_modes ) {
+less_than <- function(program, params, param_modes, relative_base ) {
   
-  a <-  get_param(program, param_modes[1], params[1])
-  b <- get_param(program, param_modes[2], params[2])
+  a <-  get_param(program, param_modes[1], params[1], relative_base )
+  b <- get_param(program, param_modes[2], params[2], relative_base)
   
-  program[params[3] + 1] <- if(a < b) 1 else 0
+  program[write_param(params[3], param_modes[3], relative_base)] <- if(a < b) 1 else 0
   program
 }
 
-equals <- function(program, params, param_modes ) {
+equals <- function(program, params, param_modes, relative_base ) {
   
-  a <-  get_param(program, param_modes[1], params[1])
-  b <- get_param(program, param_modes[2], params[2])
+  a <-  get_param(program, param_modes[1], params[1], relative_base)
+  b <- get_param(program, param_modes[2], params[2], relative_base)
   
-  program[params[3] + 1] <- if(a == b) 1 else 0
+  program[write_param(params[3], param_modes[3], relative_base)] <- if(a == b) 1 else 0
   program
 }
 
 get_input <- function(program, params, input, param_modes, relative_base ) {
   
-  intput_ptr <- if(param_modes[1] == 0){
-    params + 1} else if(param_modes[1] == 2){
-      params + relative_base + 1
-    }
-  program[intput_ptr] <- input[1]
+ 
+  program[write_param(params[1], param_modes[1], relative_base)] <- input[1]
   
   program
   
@@ -93,39 +97,24 @@ set_output <- function(program, param, param_mode, output, relative_base ) {
 }
 
 jump_if_true <- function(program, params, param_modes, instruction_pointer,
-                         opcode){
-  a <- if(param_modes[1] == 0){
-    program[params[1] + 1]
-  } else {
-    params[1]
-  }
+                         opcode, relative_base){
   
-  b <- if(param_modes[2] == 0){
-    program[params[2] + 1]
-  } else {
-    params[2]
-  }
+  a <- get_param(program, param_modes[1], params[1], relative_base)
   
-  if (a != 0) {b + 1} else {
+  b <- get_param(program, param_modes[2], params[2], relative_base)
+ 
+  if (a != 0) {if(param_modes[2] = 1) {b} else {b + 1}} else {
     get_next_intruction_pointer(instruction_pointer, opcode)}
   
 }
 
 jump_if_false <- function(program, params, param_modes, instruction_pointer,
-                          opcode){
-  a <- if(param_modes[1] == 0){
-    program[params[1] + 1]
-  } else {
-    params[1]
-  }
+                          opcode, relative_base){
+  a <- get_param(program, param_modes[1], params[1], relative_base)
   
-  b <- if(param_modes[2] == 0){
-    program[params[2] + 1]
-  } else {
-    params[2]
-  }
+  b <- get_param(program, param_modes[2], params[2], relative_base)
   
-  if (a == 0) {b + 1} else {
+  if (a == 0) {if(param_modes[2] = 1) {b} else {b + 1}} else {
     get_next_intruction_pointer(instruction_pointer, opcode)}
   
 }
@@ -144,8 +133,7 @@ intcode <- function(program,
                     output = NULL,
                     instruction_pointer = 1,
                     relative_base = 0){
-  
-  
+
   instruction <- program[instruction_pointer]
   #end of program
   if (instruction == 99) return(output)
@@ -161,18 +149,18 @@ intcode <- function(program,
   
   program <- if(opcode == 1){
  
-    add(program, params, param_modes)
+    add(program, params, param_modes, relative_base)
   } else if(opcode == 2) {
   
-    multiply(program, params, param_modes)
+    multiply(program, params, param_modes, relative_base)
   } else if(opcode == 3) {
     get_input(program, params , input, param_modes, relative_base)
     
   } else if(opcode == 7) {
-    less_than(program, params , param_modes )
+    less_than(program, params , param_modes , relative_base)
   } else if(opcode == 8) {
     
-    equals(program, params , param_modes )
+    equals(program, params , param_modes, relative_base )
   } else program
   
   output <-  if(opcode == 4) {
@@ -181,9 +169,11 @@ intcode <- function(program,
   } else output
   
   instruction_pointer <-  if(opcode == 5){
-    jump_if_true(program, params, param_modes,instruction_pointer, opcode)
+    jump_if_true(program, params, param_modes,instruction_pointer, opcode,
+                 relative_base)
   } else  if(opcode == 6){
-    jump_if_false(program, params, param_modes,instruction_pointer, opcode)
+    jump_if_false(program, params, param_modes,instruction_pointer, opcode,
+                  relative_base)
   } else {
     get_next_intruction_pointer(instruction_pointer, opcode)
   }
@@ -195,13 +185,20 @@ intcode <- function(program,
   
   #if( opcode == 3 & !is.null(input)){
    # input <-  NULL}
-  
+ 
   intcode(program, input, output, instruction_pointer, relative_base )
   
   
  }
 
-intcode(c(109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99 ))
-intcode(program, input = 1)
-program
-intcode(c(109,1,203,11,209,8,204,1,99,10,0,42,0),10)
+
+ 
+part1 <- intcode(program, input = 1)
+part1 
+
+#needed because recursove function exceeds r stack limit
+tr_intcode <- tailr::loop_transform(intcode)
+part2 <- tr_intcode(program, input = 2)
+part2
+
+
