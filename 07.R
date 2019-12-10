@@ -5,7 +5,7 @@ program <- scan("07_input.txt", sep = ",")
 
 get_param_modes <- function(instr){instr %/% 10^c(2:4) %% 10}
 
-get_opcode <- function(instr) {instr %% 10^2}
+get_opcode <- function(instr) { instr %% 10^2}
 
 get_n_params <- function(op){ switch(op, 3, 3, 1, 1, 2, 2, 3, 3) }
 
@@ -121,10 +121,7 @@ jump_if_false <- function(program, params, param_modes, instruction_pointer,
 intcode <- function(program,
                     input = NULL,
                     output = NULL,
-                    instruction_pointer = 1,
-                    input_pointer = 1,
-                    phase_processed = FALSE,
-                    mode = "sequence"){
+                    instruction_pointer = 1){
 
  
   instruction <- program[instruction_pointer]
@@ -132,6 +129,11 @@ intcode <- function(program,
   if (instruction == 99) return(output)
   
   opcode <- get_opcode(instruction)
+  
+  if(opcode == 3 & is.null(input)) {
+  return(list(program = program, instruction_pointer = instruction_pointer, output = output))}
+  
+  
   param_modes <- get_param_modes(instruction)
   params <- program[instruction_pointer + 1:get_n_params(opcode)]
   
@@ -140,7 +142,7 @@ intcode <- function(program,
   } else if(opcode == 2) {
       multiply(program, params, param_modes)
   } else if(opcode == 3) {
-      get_input(program, params , input[input_pointer])
+        get_input(program, params , input)
       
   } else if(opcode == 7) {
     less_than(program, params , param_modes )
@@ -160,24 +162,11 @@ intcode <- function(program,
     get_next_intruction_pointer(instruction_pointer, opcode)
   }
   
+ if( opcode == 3 & !is.null(input)){
+  input <-  NULL}
 
-  phase_processed <- if(input_pointer > 1 & opcode == 3) {!phase_processed} else {phase_processed}
-  
-  input_pointer <- if(opcode == 3){
-    input_pointer + 1
-  } else input_pointer
-  
-
-
-  
-  
- # print(program)
-  if(mode == "sequence" | (!phase_processed & opcode != 3) ){
-  intcode(program, input, output, instruction_pointer, input_pointer, phase_processed)
-  } else {
-    list(program = program, input = input, output =  output,  instruction_pointer = instruction_pointer, input_pointer = input_pointer,
-         phase_processed = phase_processed)
-  }
+  intcode(program, input, output, instruction_pointer )
+ 
   
 }
 
@@ -201,17 +190,58 @@ part1
 
 
 
-program <- c(3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,
-             27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5)
+test_program <- c(3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,
+             -5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,
+             53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10)
 
-intcode(program, c(5, 0), mode = "feedback")
+#initialize amp
+initialise_amp <- function(program, phase){
+  intcode(program, phase)
+}
+ 
+
+test_phase <- function(phase, program){
+
+amps <- lapply(phase, initialise_amp, program = program)
+
+
+
+amps[[1]] <- intcode(amps[[1]]$program, input = 0, instruction_pointer = amps[[1]]$instruction_pointer)
+ 
+
+repeat({
+amps[[2]] <- intcode(amps[[2]]$program, input = ifelse(is.list(amps[[1]]),amps[[1]]$output,amps[[1]]), instruction_pointer = amps[[2]]$instruction_pointer)
+ 
+
+amps[[3]] <- intcode(amps[[3]]$program, input =  ifelse(is.list(amps[[2]]),amps[[2]]$output,amps[[2]]), instruction_pointer = amps[[3]]$instruction_pointer)
+ 
+
+amps[[4]]<- intcode(amps[[4]]$program, input =  ifelse(is.list(amps[[3]]),amps[[3]]$output,amps[[3]]), instruction_pointer = amps[[4]]$instruction_pointer)
+ 
+
+
+amps[[5]]<- intcode(amps[[5]]$program, input =   ifelse(is.list(amps[[4]]),amps[[4]]$output,amps[[4]]), instruction_pointer = amps[[5]]$instruction_pointer)
+ 
+if(!is.list(amps[[5]])) break()
+
+amps[[1]] <- intcode(amps[[1]]$program,  ifelse(is.list(amps[[5]]),amps[[5]]$output,amps[[5]]), instruction_pointer = amps[[1]]$instruction_pointer)
+ 
+}
+)
+
+amps[[5]]
+}
+
+test_phase(c(9,7,8,5,6), program)
+
 
 phases <- gtools::permutations(5, 5, 5:9)
-phases 
-apply(phases, 1, run_sequence)
-amp_controller(0,5)
 
-intcode(program, c(5,0))
+part2 <- apply(phases, 1, test_phase, program = program) %>% 
+  max()
+
+part2
+ 
 
 
 
