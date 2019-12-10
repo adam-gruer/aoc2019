@@ -1,24 +1,29 @@
-
 library(purrr)
+options(digits = 22)
 
-program <- scan("07_input.txt", sep = ",")
+program <- scan("09_input.txt", sep = ",")
 
 get_param_modes <- function(instr){instr %/% 10^c(2:4) %% 10}
 
 get_opcode <- function(instr) { instr %% 10^2}
 
-get_n_params <- function(op){ switch(op, 3, 3, 1, 1, 2, 2, 3, 3) }
+get_n_params <- function(op){ switch(op, 3, 3, 1, 1, 2, 2, 3, 3, 1) }
 
 get_next_intruction_pointer <- function(instruction_pointer, op){
   instruction_pointer + get_n_params(op) + 1
 }
 
-get_param <- function(program, param_mode, param) {
- if(param_mode == 0){
-   program[param + 1]
- } else {
-   param
- }
+get_param <- function(program, param_mode, param, relative_base = 0) {
+  
+  if(param_mode == 0){
+    param <- program[param + 1]
+    ifelse(is.na(param), 0, param)
+  } else if (param_mode == 2){
+    param <- program[param + relative_base + 1]
+    ifelse(is.na(param), 0, param)
+  }else {
+    param
+  }
 }
 
 add <- function(program, params, param_modes ) {
@@ -61,20 +66,28 @@ equals <- function(program, params, param_modes ) {
   program
 }
 
-get_input <- function(program, params, input ) {
+get_input <- function(program, params, input, param_modes, relative_base ) {
   
-  program[params + 1] <- input[1]
-
+  intput_ptr <- if(param_modes[1] == 0){
+    params + 1} else if(param_modes[1] == 2){
+      params + relative_base + 1
+    }
+  program[intput_ptr] <- input[1]
+  
   program
   
 }
 
-set_output <- function(program, params, param_modes, output ) {
+set_output <- function(program, param, param_mode, output, relative_base ) {
   output <- c(output,
-              if ( param_modes[1] == 0 ){
-                program[params + 1]}
-              else {
-                params
+              if(param_mode[1] == 0){
+                param <- program[param[1] + 1]
+                ifelse(is.na(param), 0, param)
+              } else if (param_mode[1] == 2){
+                param <- program[param[1] + relative_base + 1]
+                ifelse(is.na(param), 0, param)
+              }else {
+                param
               })
   output
 }
@@ -99,7 +112,7 @@ jump_if_true <- function(program, params, param_modes, instruction_pointer,
 }
 
 jump_if_false <- function(program, params, param_modes, instruction_pointer,
-                         opcode){
+                          opcode){
   a <- if(param_modes[1] == 0){
     program[params[1] + 1]
   } else {
@@ -117,13 +130,22 @@ jump_if_false <- function(program, params, param_modes, instruction_pointer,
   
 }
 
+adjust_relative_base <- function(relative_base, param, param_mode, program){
+  param <- if(param_mode == 0){
+    program[param + 1]
+  } else if (param_mode == 2){
+    program[param + relative_base + 1]
+  } else param
+  relative_base + param
+} 
 
 intcode <- function(program,
                     input = NULL,
                     output = NULL,
-                    instruction_pointer = 1){
-
- 
+                    instruction_pointer = 1,
+                    relative_base = 0){
+  
+  
   instruction <- program[instruction_pointer]
   #end of program
   if (instruction == 99) return(output)
@@ -131,27 +153,31 @@ intcode <- function(program,
   opcode <- get_opcode(instruction)
   
   if(opcode == 3 & is.null(input)) {
-  return(list(program = program, instruction_pointer = instruction_pointer, output = output))}
+    return(list(program = program, instruction_pointer = instruction_pointer, output = output))}
   
   
   param_modes <- get_param_modes(instruction)
   params <- program[instruction_pointer + 1:get_n_params(opcode)]
   
   program <- if(opcode == 1){
-       add(program, params, param_modes)
+ 
+    add(program, params, param_modes)
   } else if(opcode == 2) {
-      multiply(program, params, param_modes)
+  
+    multiply(program, params, param_modes)
   } else if(opcode == 3) {
-        get_input(program, params , input)
-      
+    get_input(program, params , input, param_modes, relative_base)
+    
   } else if(opcode == 7) {
     less_than(program, params , param_modes )
   } else if(opcode == 8) {
+    
     equals(program, params , param_modes )
   } else program
   
   output <-  if(opcode == 4) {
-    set_output(program, params, param_modes, output)
+ 
+    set_output(program, params, param_modes, output, relative_base)
   } else output
   
   instruction_pointer <-  if(opcode == 5){
@@ -162,91 +188,20 @@ intcode <- function(program,
     get_next_intruction_pointer(instruction_pointer, opcode)
   }
   
- if( opcode == 3 & !is.null(input)){
-  input <-  NULL}
-
-  intcode(program, input, output, instruction_pointer )
+  relative_base <- if(opcode == 9){
  
+    adjust_relative_base(relative_base, params, param_modes, program)
+  } else relative_base
   
-}
+  #if( opcode == 3 & !is.null(input)){
+   # input <-  NULL}
+  
+  intcode(program, input, output, instruction_pointer, relative_base )
+  
+  
+ }
 
-
-
-
-amp_controller <- function(input, phase){
-  intcode(program, c(phase, input))
-}
-
-run_sequence <- function(sequence){
-  reduce(sequence, amp_controller, .init = 0 )
-}
-
-phases <- gtools::permutations(5, 5, 0:4)
-
-part1 <- apply(phases, 1, run_sequence) %>% 
-  max()
-
-part1
-
-
-
-test_program <- c(3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,
-             -5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,
-             53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10)
-
-#initialize amp
-initialise_amp <- function(program, phase){
-  intcode(program, phase)
-}
- 
-
-feed_back_loop <- function(phase, program){
-
-amps <- lapply(phase, initialise_amp, program = program)
-
-
-
-amps[[1]] <- intcode(amps[[1]]$program, input = 0, instruction_pointer = amps[[1]]$instruction_pointer)
- 
-
-repeat({
-amps[[2]] <- intcode(amps[[2]]$program, input = ifelse(is.list(amps[[1]]),amps[[1]]$output,amps[[1]]), instruction_pointer = amps[[2]]$instruction_pointer)
- 
-
-amps[[3]] <- intcode(amps[[3]]$program, input =  ifelse(is.list(amps[[2]]),amps[[2]]$output,amps[[2]]), instruction_pointer = amps[[3]]$instruction_pointer)
- 
-
-amps[[4]]<- intcode(amps[[4]]$program, input =  ifelse(is.list(amps[[3]]),amps[[3]]$output,amps[[3]]), instruction_pointer = amps[[4]]$instruction_pointer)
- 
-
-
-amps[[5]]<- intcode(amps[[5]]$program, input =   ifelse(is.list(amps[[4]]),amps[[4]]$output,amps[[4]]), instruction_pointer = amps[[5]]$instruction_pointer)
- 
-if(!is.list(amps[[5]])) break()
-
-amps[[1]] <- intcode(amps[[1]]$program,  ifelse(is.list(amps[[5]]),amps[[5]]$output,amps[[5]]), instruction_pointer = amps[[1]]$instruction_pointer)
- 
-}
-)
-
-amps[[5]]
-}
-
-test_phase(c(9,7,8,5,6), program)
-
-
-phases <- gtools::permutations(5, 5, 5:9)
-
-part2 <- apply(phases, 1, test_phase, program = program) %>% 
-  max()
-
-part2
- 
-
-
-
-
-
-
-
-
+intcode(c(109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99 ))
+intcode(program, input = 1)
+program
+intcode(c(109,1,203,11,209,8,204,1,99,10,0,42,0),10)
