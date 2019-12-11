@@ -103,7 +103,7 @@ jump_if_true <- function(program, params, param_modes, instruction_pointer,
   
   b <- get_param(program, param_modes[2], params[2], relative_base)
  
-  if (a != 0) {if(param_modes[2] == 1) {b} else {b + 1}} else {
+  if (a != 0) { b + 1 } else {
     get_next_intruction_pointer(instruction_pointer, opcode)}
   
 }
@@ -114,7 +114,7 @@ jump_if_false <- function(program, params, param_modes, instruction_pointer,
   
   b <- get_param(program, param_modes[2], params[2], relative_base)
   
-  if (a == 0) {if(param_modes[2] == 1) {b} else {b + 1}} else {
+  if (a == 0) { b + 1 } else {
     get_next_intruction_pointer(instruction_pointer, opcode)}
   
 }
@@ -146,7 +146,7 @@ intcode <- function(program,
   
   param_modes <- get_param_modes(instruction)
   params <- program[instruction_pointer + 1:get_n_params(opcode)]
-  
+
   program <- if(opcode == 1){
  
     add(program, params, param_modes, relative_base)
@@ -185,12 +185,12 @@ intcode <- function(program,
   
   #if( opcode == 3 & !is.null(input)){
    # input <-  NULL}
- 
+
   intcode(program, input, output, instruction_pointer, relative_base )
   
   
  }
-
+intcode(c(109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99))
 
  
 part1 <- intcode(program, input = 1)
