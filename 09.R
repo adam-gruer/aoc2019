@@ -103,7 +103,7 @@ jump_if_true <- function(program, params, param_modes, instruction_pointer,
   
   b <- get_param(program, param_modes[2], params[2], relative_base)
  
-  if (a != 0) {if(param_modes[2] = 1) {b} else {b + 1}} else {
+  if (a != 0) {if(param_modes[2] == 1) {b} else {b + 1}} else {
     get_next_intruction_pointer(instruction_pointer, opcode)}
   
 }
@@ -114,7 +114,7 @@ jump_if_false <- function(program, params, param_modes, instruction_pointer,
   
   b <- get_param(program, param_modes[2], params[2], relative_base)
   
-  if (a == 0) {if(param_modes[2] = 1) {b} else {b + 1}} else {
+  if (a == 0) {if(param_modes[2] == 1) {b} else {b + 1}} else {
     get_next_intruction_pointer(instruction_pointer, opcode)}
   
 }
