@@ -28,7 +28,7 @@ part1 <- map_int(asteroids, unique_angles, asteroids = asteroids)%>%
 part1
 
 
-
+##alternate
 angle_between_cmplex <- function(a, b){
   Arg(a - b) 
 }
@@ -40,76 +40,51 @@ n_unique_lines_of_sight <- function(a, b){
 }
 
 
+asteroids <- which(asteroid_map == "#", arr.ind = TRUE)
+colnames(asteroids) <- c("y","x")
+
 asteroids_cmplx <- complex(real = asteroids[,"x"], imaginary = asteroids[,"y"])
 
 
-imap_dbl(asteroids_cmplx, function(asteroid,i, asteroids){
+part1 <- imap_dbl(asteroids_cmplx, function(asteroid,i, asteroids){
     n_unique_lines_of_sight(asteroid, asteroids[-i]) 
   }, asteroids = asteroids_cmplx) %>%
   max()
+part1
 
+##Part 2
 station <- 
   imap_dbl(asteroids_cmplx, function(asteroid,i, asteroids){
     n_unique_lines_of_sight(asteroid, asteroids[-i]) 
   }, asteroids = asteroids_cmplx) %>%
   which.max()
 
-diff_from_station <- asteroids_cmplx[-station] - asteroids_cmplx[station] 
- 
-angles <- Arg(diff_from_station)
-distances <- sqrt(Re(diff_from_station)^2 + Im(diff_from_station)^2 )
+target_asteroids <- asteroids_cmplx[-station]
+diff_from_station <- target_asteroids  - asteroids_cmplx[station]
 
-asteroids_cmplx[-station]
-
-asteroids_cmplx[-station][order(distances)][order(angles - Arg(0+1i))]
-
-angles / Arg(0+1i)
-
-
-test <- c(".#....#####...#..",
-"##...##.#####..##",
-"##...#...#.#####.",
-"..#.....X...###..",
-"..#.#.....#....##")
-
-test <- stringr::str_split(test,"", simplify = TRUE)          
-test
-
-asteroids_t <- which(test == "#", arr.ind = TRUE)
-colnames(asteroids_t) <- c("y","x")
-
-station <- which(test == "X", arr.ind = TRUE)
-colnames(station) <- c("y","x")
-station
-
-asteroids_t_c <- complex(real = asteroids_t[,"x"], imaginary = asteroids_t[,"y"])
-station_c <-  complex(real = station[,"x"], imaginary = station[,"y"])
-station_c
-
-
-differ <- station_c - asteroids_t_c 
-differ
-asteroids.df <- data.frame(asteroid = asteroids_t_c, diff_from_station = differ, angle_r = Arg(differ)    , distance = Mod(differ))
+asteroids.df <- data.frame(asteroid = target_asteroids,
+                           diff_from_station = diff_from_station, 
+                           angle_r = Arg(diff_from_station) ,
+                           distance = Mod(diff_from_station))
 asteroids.df$angle_d <- (asteroids.df$angle_r  * 180/pi)
 
-asteroids.df$angle_d[asteroids.df$angle_d <= 0] <- abs(asteroids.df$angle_d[asteroids.df$angle_d <= 0]) + 90
+ast_200 <- asteroids.df %>% 
+  mutate(heading = dplyr::case_when(
+    angle_r >= - (pi /2) & angle_r <= 0 ~  angle_d + 90,
+    angle_r > 0 ~ abs(angle_r *180/pi) + 90,
+    TRUE ~ 180 + (angle_r *180/pi) + 270
+  )) %>% 
+  arrange(heading, distance) %>% 
+  group_by(heading) %>% 
+  tidyr::nest() %>% 
+  ungroup() %>% 
+  slice(200) %>% 
+  mutate(aster = map(data, function(df){
+    df[1, ] %>% pull(asteroid)
+  })) %>% 
+  pull (aster) %>% 
+  unlist()
 
-asteroids.df %>% 
-  mutate(new_angle = case_when(
-    angle_d <= 0 ~ abs(angle_d) + 90,
-    angle_d > 0 & angle_d <= 90 ~ 90 - angle_d,
-    angle_d > 90 & angle_d <= 180 ~ angle_d + 180
-  ))
-
-
-asteroids.df %>%
-  nest(angle = angle) %>% 
-   arrange(distance, .by_group = TRUE) %>%  View()
-library(tidyr)
-
-
-range(asteroids.df$angle)
-
-
-tapply(asteroids_t_c, list(Arg(differ) -Arg(0 + 1i)), FUN = list) -> same_angle
-
+x <- Re(ast_200) - 1
+y <-  Im(ast_200) - 1
+x * 100 + y
