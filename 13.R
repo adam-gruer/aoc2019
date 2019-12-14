@@ -86,7 +86,7 @@ animate_recording <- function(screen_recording){
     theme_void() +
     scale_fill_hyperBubble() + 
     coord_equal() +
-    transition_time(frame)
+    transition_time(frame) 
 }
 
 #####input
@@ -117,16 +117,16 @@ screen_recording[seq(from = frame * 961 - 960, to = frame * 961 ), ] <-  cbind(s
 
 #gameloop
 while(is.list(game)){
-frame <- frame + 1
-game <- tr_intcode(game$program,
-                   input = joystick_input(screen),
-                   instruction_pointer = game$instruction_pointer,
-                   relative_base = game$relative_base)
-
-if(is.list(game)) {
-screen <- update_screen(screen, get_screen(game))
-} else  { 
-  screen <- update_screen(screen, matrix(game, ncol = 3, byrow = TRUE))
+    frame <- frame + 1
+    game <- tr_intcode(game$program,
+                       input = joystick_input(screen),
+                       instruction_pointer = game$instruction_pointer,
+                       relative_base = game$relative_base)
+    
+    if(is.list(game)) {
+    screen <- update_screen(screen, get_screen(game))
+    } else  { 
+      screen <- update_screen(screen, matrix(game, ncol = 3, byrow = TRUE))
 }
 
 screen_recording[seq(from = frame * 961 - 960, to = frame * 961 ), ] <-  cbind(screen, frame)
