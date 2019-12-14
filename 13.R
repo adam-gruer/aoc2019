@@ -86,12 +86,8 @@ animate_recording <- function(screen_recording){
     theme_void() +
     scale_fill_hyperBubble() + 
     coord_equal() +
-<<<<<<< HEAD
     transition_time(frame) 
-=======
-    transition_time(frame) + 
-    shadow_trail()
->>>>>>> 9969a5e7ebb83a9d0c47a04d97eee24f171cfcb0
+
 }
 
 #####input
